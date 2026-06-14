@@ -400,7 +400,7 @@
               updateUI();
               playAnimationStep();
               startTimer();
-              return; // tránh rơi xuống block dưới gây double timer
+              return; // Avoid falling through to the block below which would trigger double timers
             }
           }
         }
@@ -456,7 +456,7 @@
         const resumeExact = (pluginState === 'paused' && !sliderUserChanged);
         pluginState = 'running';
         if (resumeExact) {
-          // Resume đúng số giây còn lại; giữ nguyên thời lượng gốc cho chu kỳ sau
+          // Resume with the exact remaining seconds; preserve the original cycle duration for the next cycle
           timerValue = pausedRemaining;
         } else {
           lastSetDuration = sliderValue * 60;
@@ -468,11 +468,11 @@
       }
       else if (pluginState === 'running') {
         pauseTimer();
-        if (animationTimer) clearTimeout(animationTimer); // dừng hẳn animation typing
+        if (animationTimer) clearTimeout(animationTimer); // Stop the typing animation completely
         pluginState = 'paused';
-        pausedRemaining = timerValue;   // lưu chính xác số giây còn lại
-        sliderUserChanged = false;      // chưa chỉnh slider kể từ khi pause
-        updateSlider(Math.ceil(timerValue / 60));       // hiển thị (snap về grid)
+        pausedRemaining = timerValue;   // Store the exact remaining seconds
+        sliderUserChanged = false;      // Slider has not been modified since pause
+        updateSlider(Math.ceil(timerValue / 60));       // Display (snap to slider grid)
         updateUI();
       }
       else if (pluginState === 'stretch-paused') {

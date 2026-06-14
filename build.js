@@ -1,12 +1,12 @@
-// build.js — tạo ui.html với frames được nhúng sẵn từ frames.json
+// build.js - Generates ui.html with pre-embedded animation frames and assets
 const fs = require('fs');
 const path = require('path');
 
-// Đọc frames.json từ widget FroQ (cùng thư mục cha)
+// Read frames.json from the FroQ widget (in the sibling directory)
 const framesPath = path.join(__dirname, '..', 'figma-froggy', 'FroQ', 'widget-src', 'frames.json');
 const frames = JSON.parse(fs.readFileSync(framesPath, 'utf-8'));
 
-// Chỉ lấy các frames cần thiết để tránh file quá lớn
+// Only extract the required animation frames to keep the ui.html bundle size optimal
 const needed = [
   'typing-01.PNG', 'typing-02.PNG',
   'drinking-01.PNG', 'drinking-02.PNG', 'drinking-03.PNG', 'drinking-04.PNG', 'drinking-05.PNG',
@@ -21,11 +21,11 @@ for (const key of needed) {
   if (frames[key]) subset[key] = frames[key];
 }
 
-// Đọc bg.PNG và chuyển sang base64
+// Read bg.PNG and convert it to a base64 Data URL
 const bgPath = path.join(__dirname, '..', 'figma-froggy', 'bg.PNG');
 const bgBase64 = `data:image/png;base64,${fs.readFileSync(bgPath).toString('base64')}`;
 
-// Đọc patrick_hand_sc.txt chứa base64 của font
+// Read patrick_hand_sc.txt containing the base64 encoded font file
 const fontBase64 = fs.readFileSync(path.join(__dirname, 'patrick_hand_sc.txt'), 'utf-8').trim();
 
 const btnPath = path.join(__dirname, 'btn.png');
@@ -452,7 +452,7 @@ const html = `<!DOCTYPE html>
               updateUI();
               playAnimationStep();
               startTimer();
-              return; // tránh rơi xuống block dưới gây double timer
+              return; // Avoid falling through to the block below which would trigger double timers
             }
           }
         }
@@ -508,7 +508,7 @@ const html = `<!DOCTYPE html>
         const resumeExact = (pluginState === 'paused' && !sliderUserChanged);
         pluginState = 'running';
         if (resumeExact) {
-          // Resume đúng số giây còn lại; giữ nguyên thời lượng gốc cho chu kỳ sau
+          // Resume with the exact remaining seconds; preserve the original cycle duration for the next cycle
           timerValue = pausedRemaining;
         } else {
           lastSetDuration = sliderValue * 60;
@@ -520,11 +520,11 @@ const html = `<!DOCTYPE html>
       }
       else if (pluginState === 'running') {
         pauseTimer();
-        if (animationTimer) clearTimeout(animationTimer); // dừng hẳn animation typing
+        if (animationTimer) clearTimeout(animationTimer); // Stop the typing animation completely
         pluginState = 'paused';
-        pausedRemaining = timerValue;   // lưu chính xác số giây còn lại
-        sliderUserChanged = false;      // chưa chỉnh slider kể từ khi pause
-        updateSlider(Math.ceil(timerValue / 60));       // hiển thị (snap về grid)
+        pausedRemaining = timerValue;   // Store the exact remaining seconds
+        sliderUserChanged = false;      // Slider has not been modified since pause
+        updateSlider(Math.ceil(timerValue / 60));       // Display (snap to slider grid)
         updateUI();
       }
       else if (pluginState === 'stretch-paused') {

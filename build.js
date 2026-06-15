@@ -2,11 +2,25 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read frames.json from the FroQ widget (in the sibling directory)
-const framesPath = path.join(__dirname, '..', 'figma-froggy', 'FroQ', 'widget-src', 'frames.json');
-const frames = JSON.parse(fs.readFileSync(framesPath, 'utf-8'));
+// Animation frames + background now live in the local asset-froq/ folder so this
+// repo is self-contained. (They previously came from a sibling ../figma-froggy/
+// directory, which no longer travels alongside this repo after the migration.)
+const assetDir = path.join(__dirname, 'asset-froq');
 
-// Only extract the required animation frames to keep the ui.html bundle size optimal
+// Case-insensitive lookup of the files actually on disk, so a key like
+// 'typing-02.PNG' resolves even when the file is named 'typing-02.png'
+// (matters on case-sensitive filesystems, e.g. Windows builds).
+const assetByLower = {};
+for (const f of fs.readdirSync(assetDir)) assetByLower[f.toLowerCase()] = f;
+
+function readAssetDataUrl(name) {
+  const real = assetByLower[name.toLowerCase()];
+  if (!real) throw new Error(`Missing asset: ${name} in ${assetDir}`);
+  const b64 = fs.readFileSync(path.join(assetDir, real)).toString('base64');
+  return `data:image/png;base64,${b64}`;
+}
+
+// Embed only the required animation frames to keep the ui.html bundle size optimal
 const needed = [
   'typing-01.PNG', 'typing-02.PNG',
   'drinking-01.PNG', 'drinking-02.PNG', 'drinking-03.PNG', 'drinking-04.PNG', 'drinking-05.PNG',
@@ -18,12 +32,11 @@ const needed = [
 
 const subset = {};
 for (const key of needed) {
-  if (frames[key]) subset[key] = frames[key];
+  subset[key] = readAssetDataUrl(key);
 }
 
 // Read bg.PNG and convert it to a base64 Data URL
-const bgPath = path.join(__dirname, '..', 'figma-froggy', 'bg.PNG');
-const bgBase64 = `data:image/png;base64,${fs.readFileSync(bgPath).toString('base64')}`;
+const bgBase64 = readAssetDataUrl('bg.PNG');
 
 // Read patrick_hand_sc.txt containing the base64 encoded font file
 const fontBase64 = fs.readFileSync(path.join(__dirname, 'patrick_hand_sc.txt'), 'utf-8').trim();
